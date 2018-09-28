@@ -55,3 +55,4 @@ def enum_windows():
 
 if __name__=="__main__":
 	messagebox("work")
+	enum_windows()
