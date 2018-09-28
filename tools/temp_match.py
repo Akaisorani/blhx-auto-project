@@ -32,9 +32,9 @@ def surf_detect(obj1, obj2):
 	# cv2.drawMatchesKnn expects list of lists as matches.
 	goodfordraw=[[x] for x in good]
 	img3 = cv2.drawMatchesKnn(obj1.img, kp1, obj2.img, kp2, goodfordraw, None, flags=2)
-	cv2.imshow('mch_res',img3)
-	cv2.waitKey(600)
-	cv2.destroyAllWindows()
+	# cv2.imshow('mch_res',img3)
+	# cv2.waitKey(600)
+	# cv2.destroyAllWindows()
 	
 	queryPos=np.array([kp1[mkp.queryIdx].pt for mkp in good],dtype=np.int32)
 	trainPos=np.array([kp2[mkp.trainIdx].pt for mkp in good],dtype=np.int32)
