@@ -14,7 +14,7 @@ from tools.get_grid_center import get_grid_center
 from tools.get_obj_pos import get_obj_pos
 from tools.get_grid_status import get_grid_status
 from tools.wintools import *
-from tools.mail import mail_to_me
+from tools.mail import mail_to_me,begin_watch,end_watch
 from tools.temp_match import surf_detect, pre_detect
 import traceback
 
@@ -64,13 +64,12 @@ def load_obj_ims():
 def get_im_xy():
 	# im=io.imread('map_sample.png')
 	# x=0;y=0
-	im=ImageGrab.grab()
-	im=np.asarray(im)
 	pos1,pos2=get_window_pos()
 	if pos1==(-1,-1):
 		messagebox("Can't find game window!")
 		raise
-	im=im[pos1[1]:pos2[1],pos1[0]:pos2[0]].copy()
+	im=ImageGrab.grab((pos1[1],pos1[0],pos2[1],pos2[0]))
+	im=np.asarray(im)
 	x,y=pos1[1],pos1[0]
 	#if len(im.shape)==3 and im.shape[2]==4:im=np.delete(im,3,2)
 	return im,x,y
@@ -96,6 +95,8 @@ time.sleep(2)
 print("start")
 load_obj_ims()
 search_fail=0
+game_rounds=0
+#begin_watch()
 
 while True:
 	gm,stx,sty=get_im_xy()
@@ -108,39 +109,47 @@ while True:
 		if res:
 			print(res)
 			search_fail=0
+			if res=="gaojiyanxi":
+				game_rounds+=1
+				if game_rounds%5==0:mail_to_me("summary","rounds = %d"%game_rounds,gm.img)
 		else:
+			# click_pos=trans_to_screenpos((height*81//417,width*663//677))
+			# mouse_click(click_pos,0.5)
 			search_fail+=1
-		if search_fail>100:
-			mail_to_me("search_fail>100")
-			search_fail=0
+		if search_fail>1 and search_fail%100==0:
+			mail_to_me('Error提醒',"search_fail>100")
+			if search_fail>1000:
+				end_watch()
+				sys.exit()
 	except Exception as e:
 		print(e)
 		print("Error")
 		traceback.print_exc()
 		try:
-			mail_to_me(str(traceback.format_exc())+str(e))
+			mail_to_me("Program Error",str(traceback.format_exc())+str(e))
 		except Exception as e2:
 			pass
 		time.sleep(600)
-	time.sleep(1.5)
+	time.sleep(2)
+	
+#end_watch()	
 	
 	
 	
-	
-	
-	# DEBUG 
-im_match_test=im.copy()
+	# DEBUG
+def DEBUG():
+	im_match_test=im.copy()
 
-for i in range(grid_h):
-	for j in range(grid_w):
-		im_match_test[grid_center[i][j][0]-2:grid_center[i][j][0]+3,grid_center[i][j][1]-2:grid_center[i][j][1]+3]=[0,0,0]
-for name,lis in obj_pos.items():
-	for pos in lis:
-		im_match_test[pos[0]:pos[0]+10,pos[1]:pos[1]+10]=[255,0,0]
-im_match_test[test_click_pos[0]:test_click_pos[0]+10,test_click_pos[1]:test_click_pos[1]+10]=[0,255,0]
+	for i in range(grid_h):
+		for j in range(grid_w):
+			im_match_test[grid_center[i][j][0]-2:grid_center[i][j][0]+3,grid_center[i][j][1]-2:grid_center[i][j][1]+3]=[0,0,0]
+	for name,lis in obj_pos.items():
+		for pos in lis:
+			im_match_test[pos[0]:pos[0]+10,pos[1]:pos[1]+10]=[255,0,0]
+	im_match_test[test_click_pos[0]:test_click_pos[0]+10,test_click_pos[1]:test_click_pos[1]+10]=[0,255,0]
 
-debugim(im_match_test)
-io.imsave('info.png',im_match_test)
+	debugim(im_match_test)
+	io.imsave('info.png',im_match_test)
 
 
 
